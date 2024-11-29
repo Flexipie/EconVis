@@ -1,0 +1,11 @@
+{% extends "financial_data/base.html" %}
+{% block content %}
+<div class="profile-container">
+    <h2>Profile</h2>
+    <p>Welcome, {{ user.username }}!</p>
+    <div class="profile-actions">
+        <a href="{% url 'financial_data:index' %}" class="btn">View Dashboard</a>
+        <a href="{% url 'accounts:logout' %}" class="btn btn-secondary">Logout</a>
+    </div>
+</div>
+{% endblock %}

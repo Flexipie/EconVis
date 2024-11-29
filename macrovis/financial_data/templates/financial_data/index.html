@@ -1,66 +1,56 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Financial Data Visualization</title>
-    {% load static %}
-    <link rel="stylesheet" href="{% static 'financial_data/css/style.css' %}">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css">
-</head>
-<body>
-    <div class="top-banner">
-        <div class="banner-title">MacroVis</div>
-    </div>
+{% extends "financial_data/base.html" %}
 
-    <div class="container">
-        <aside class="sidebar">
-            <h2>Indicators</h2>
-            <div class="indicator-list">
-                {% for indicator in indicators %}
-                <div class="indicator-item" data-indicator="{{ indicator.id }}">
-                    {{ indicator.name }}
-                </div>
-                {% endfor %}
+{% block content %}
+<div class="container">
+    <aside class="sidebar">
+        <h2>Indicators</h2>
+        <div class="indicator-list">
+            {% for indicator in indicators %}
+            <div class="indicator-item" data-indicator="{{ indicator.code }}">
+                {{ indicator.name }}
+                <!-- Debug info -->
+                <span style="display: none;">Code: {{ indicator.code }}</span>
             </div>
-        </aside>
+            {% endfor %}
+        </div>
+    </aside>
+    
+    <main class="main-content">
+        <div class="country-selectors">
+            <div class="selector">
+                <label for="country-select-1">Select First Country:</label>
+                <select id="country-select-1">
+                    <option value="">Select a country</option>
+                    {% for country in countries %}
+                    <option value="{{ country.code }}">{{ country.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+            <div class="selector">
+                <label for="country-select-2">Select Second Country:</label>
+                <select id="country-select-2">
+                    <option value="">Select a country</option>
+                    {% for country in countries %}
+                    <option value="{{ country.code }}">{{ country.name }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+        </div>
         
-        <main class="main-content">
-            <div class="country-selectors">
-                <div class="selector">
-                    <label for="country-select-1">Country 1:</label>
-                    <select id="country-select-1">
-                        <option value="">Select a country</option>
-                        {% for country in countries %}
-                        <option value="{{ country.code }}">{{ country.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
+        <div class="chart-container">
+            <canvas id="chart"></canvas>
+        </div>
+    </main>
+</div>
 
-                <div class="selector">
-                    <label for="country-select-2">Country 2:</label>
-                    <select id="country-select-2">
-                        <option value="">Select a country</option>
-                        {% for country in countries %}
-                        <option value="{{ country.code }}">{{ country.name }}</option>
-                        {% endfor %}
-                    </select>
-                </div>
-            </div>
-
-            <div class="chart-container">
-                <canvas id="chart"></canvas>
-                <div id="indicator-info" class="indicator-info"></div>
-            </div>
-
-            <div class="chart-controls">
-                <button id="download-btn" class="download-button">
-                    <i class="fas fa-download"></i> Download Data
-                </button>
-            </div>
-        </main>
+<!-- Debug info -->
+<div style="display: none;">
+    <h3>Available Indicators:</h3>
+    {% for indicator in indicators %}
+    <div>
+        Code: {{ indicator.code }},
+        Name: {{ indicator.name }}
     </div>
-    <script src="{% static 'financial_data/js/script.js' %}"></script>
-</body>
-</html>
+    {% endfor %}
+</div>
+{% endblock %}

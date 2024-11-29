@@ -22,13 +22,22 @@ function handleIndicatorClick(event) {
 }
 
 // Add click event listeners to indicators
-document.querySelectorAll('.indicator-item').forEach(item => {
-    item.addEventListener('click', handleIndicatorClick);
-});
+document.addEventListener('DOMContentLoaded', function() {
+    document.querySelectorAll('.indicator-item').forEach(item => {
+        item.addEventListener('click', handleIndicatorClick);
+    });
 
-// Add change event listeners to country selects
-document.getElementById('country-select-1').addEventListener('change', updateChart);
-document.getElementById('country-select-2').addEventListener('change', updateChart);
+    // Add change event listeners to country selects
+    document.getElementById('country-select-1').addEventListener('change', updateChart);
+    document.getElementById('country-select-2').addEventListener('change', updateChart);
+
+    // Initialize with first indicator
+    const firstIndicator = document.querySelector('.indicator-item');
+    if (firstIndicator) {
+        firstIndicator.classList.add('active');
+        updateChart();
+    }
+});
 
 // Create or update chart
 function createOrUpdateChart(datasets, title) {
@@ -45,9 +54,11 @@ function createOrUpdateChart(datasets, title) {
         },
         options: {
             responsive: true,
-            title: {
-                display: true,
-                text: title
+            plugins: {
+                title: {
+                    display: true,
+                    text: title
+                }
             },
             scales: {
                 x: {
@@ -76,6 +87,7 @@ async function updateChart() {
     const activeIndicator = document.querySelector('.indicator-item.active');
     
     if ((!country1Select.value && !country2Select.value) || !activeIndicator) {
+        console.log('No country or indicator selected');
         return;
     }
 
@@ -91,49 +103,48 @@ async function updateChart() {
     ].filter(country => country.code);
 
     const indicator = activeIndicator.dataset.indicator;
+    console.log('Selected indicator:', indicator); // Debug log
+    
+    if (!indicator) {
+        console.log('No indicator code found in dataset');
+        return;
+    }
+
     const datasets = [];
 
     try {
-        for (const country of selectedCountries) {
-            const response = await fetch(`/api/data/${country.code}/${indicator}/`);
+        for (let i = 0; i < selectedCountries.length; i++) {
+            const country = selectedCountries[i];
+            console.log(`Fetching data for country: ${country.code}, indicator: ${indicator}`);
+            
+            const response = await fetch(`/api/financial-data/${country.code}/${indicator}/`);
+            
             if (!response.ok) {
                 console.error(`Error fetching data for ${country.code}: ${response.statusText}`);
                 continue;
             }
             
             const data = await response.json();
+            console.log(`Received data for ${country.code}:`, data);
             
-            if (Array.isArray(data) && data.length > 0) {
-                const processedData = data.map(item => ({
-                    x: item.year,
-                    y: item.value
-                })).filter(item => item.y !== null);
-
+            if (data && Array.isArray(data)) {
                 datasets.push({
                     label: country.name,
-                    data: processedData,
-                    borderColor: getCountryColor(selectedCountries.indexOf(country)),
+                    data: data.map(d => ({x: d.year, y: d.value})),
+                    borderColor: getCountryColor(i),
                     backgroundColor: 'transparent',
-                    borderWidth: 2,
-                    tension: 0.4,
-                    spanGaps: true
+                    fill: false
                 });
             }
         }
 
         if (datasets.length > 0) {
-            createOrUpdateChart(datasets, activeIndicator.textContent);
-            document.getElementById('indicator-info').textContent = 
-                `Showing ${activeIndicator.textContent} for ${selectedCountries.map(c => c.name).join(' and ')}`;
+            const title = activeIndicator.textContent;
+            createOrUpdateChart(datasets, title);
         } else {
-            document.getElementById('indicator-info').textContent = 'No data available for selected countries';
+            console.log('No data available for the selected countries and indicator');
         }
     } catch (error) {
         console.error('Error updating chart:', error);
-        document.getElementById('indicator-info').textContent = 'Error loading data';
     }
 }
-
-// Initialize with first indicator
-document.querySelector('.indicator-item').classList.add('active');
-updateChart();
