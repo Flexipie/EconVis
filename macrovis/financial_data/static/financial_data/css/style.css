@@ -228,6 +228,16 @@ canvas#chart {
     background: #5a6268;
 }
 
+.error-message {
+    color: #721c24;
+    background-color: #f8d7da;
+    border: 1px solid #f5c6cb;
+    padding: 15px;
+    border-radius: 4px;
+    margin-top: 15px;
+    text-align: center;
+}
+
 /* Responsive design */
 @media (max-width: 768px) {
     .container {

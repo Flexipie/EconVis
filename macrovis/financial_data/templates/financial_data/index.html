@@ -6,7 +6,7 @@
         <h2>Indicators</h2>
         <div class="indicator-list">
             {% for indicator in indicators %}
-            <div class="indicator-item" data-indicator="{{ indicator.code }}">
+            <div class="indicator-item" data-code="{{ indicator.code }}">
                 {{ indicator.name }}
                 <!-- Debug info -->
                 <span style="display: none;">Code: {{ indicator.code }}</span>
@@ -39,6 +39,7 @@
         
         <div class="chart-container">
             <canvas id="chart"></canvas>
+            <div id="error-message" style="display: none;" class="error-message"></div>
         </div>
     </main>
 </div>

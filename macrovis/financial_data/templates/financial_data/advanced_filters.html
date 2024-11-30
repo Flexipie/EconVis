@@ -1,0 +1,363 @@
+{% extends 'financial_data/base.html' %}
+{% load static %}
+
+{% block content %}
+<div class="advanced-filters-container">
+    <h1 class="page-title">Advanced Data Filters</h1>
+    
+    <div class="content-wrapper">
+        <!-- Left side: Filters -->
+        <div class="filter-section">
+            <h2>Filter Options</h2>
+            <form id="filterForm">
+                <!-- Indicator Selection -->
+                <div class="form-group">
+                    <label for="indicator">Indicator:</label>
+                    <select id="indicator" name="indicator" required>
+                        <option value="">Select an indicator</option>
+                        {% for indicator in indicators %}
+                        <option value="{{ indicator.id }}">{{ indicator.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Country Selection (Multiple) -->
+                <div class="form-group">
+                    <label>Countries:</label>
+                    <div class="country-select">
+                        {% for country in countries %}
+                        <div class="checkbox-item">
+                            <input type="checkbox" name="countries[]" value="{{ country.code }}" id="country_{{ country.code }}">
+                            <label for="country_{{ country.code }}">{{ country.name }}</label>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+
+                <!-- Date Range -->
+                <div class="form-group date-range">
+                    <div class="input-group">
+                        <label for="start_year">Start Year:</label>
+                        <input type="number" id="start_year" name="start_year" min="1960" max="2024">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="end_year">End Year:</label>
+                        <input type="number" id="end_year" name="end_year" min="1960" max="2024">
+                    </div>
+                </div>
+
+                <!-- Value Range -->
+                <div class="form-group value-range">
+                    <div class="input-group">
+                        <label for="min_value">Minimum Value:</label>
+                        <input type="number" id="min_value" name="min_value" step="0.01">
+                    </div>
+                    
+                    <div class="input-group">
+                        <label for="max_value">Maximum Value:</label>
+                        <input type="number" id="max_value" name="max_value" step="0.01">
+                    </div>
+                </div>
+
+                <!-- Aggregation Options -->
+                <div class="form-group">
+                    <label for="aggregation">Aggregation:</label>
+                    <select id="aggregation" name="aggregation">
+                        <option value="">No Aggregation</option>
+                        <option value="avg">Average</option>
+                        <option value="sum">Sum</option>
+                        <option value="min">Minimum</option>
+                        <option value="max">Maximum</option>
+                    </select>
+                </div>
+
+                <button type="submit" class="btn btn-primary">Apply Filters</button>
+            </form>
+        </div>
+
+        <!-- Right side: Results -->
+        <div class="results-section">
+            <h2>Results</h2>
+            <div id="chartContainer">
+                <canvas id="dataChart"></canvas>
+            </div>
+            <div id="dataTable"></div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const filterForm = document.getElementById('filterForm');
+    let chart = null;
+
+    filterForm.addEventListener('submit', async function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(filterForm);
+        const queryParams = new URLSearchParams(formData);
+        
+        try {
+            const response = await fetch(`/financial-data/api/filter/?${queryParams.toString()}`);
+            const data = await response.json();
+            
+            if (data.error) {
+                alert(data.error);
+                return;
+            }
+
+            // Update chart
+            updateChart(data.data);
+            
+            // Update table
+            updateTable(data.data);
+        } catch (error) {
+            console.error('Error:', error);
+            alert('An error occurred while fetching the data');
+        }
+    });
+
+    function updateChart(data) {
+        // Destroy existing chart if it exists
+        if (chart) {
+            chart.destroy();
+        }
+
+        // Prepare data for Chart.js
+        const chartData = {
+            labels: [...new Set(data.map(item => item.year))].sort(),
+            datasets: []
+        };
+
+        // Group data by country
+        const countryGroups = {};
+        data.forEach(item => {
+            if (!countryGroups[item.country__name]) {
+                countryGroups[item.country__name] = [];
+            }
+            countryGroups[item.country__name].push({
+                year: item.year,
+                value: item.value
+            });
+        });
+
+        // Create dataset for each country
+        Object.entries(countryGroups).forEach(([country, values]) => {
+            chartData.datasets.push({
+                label: country,
+                data: values.map(v => v.value),
+                fill: false,
+                tension: 0.1
+            });
+        });
+
+        // Create new chart
+        const ctx = document.getElementById('dataChart').getContext('2d');
+        chart = new Chart(ctx, {
+            type: 'line',
+            data: chartData,
+            options: {
+                responsive: true,
+                plugins: {
+                    title: {
+                        display: true,
+                        text: 'Financial Data Visualization'
+                    }
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true
+                    }
+                }
+            }
+        });
+    }
+
+    function updateTable(data) {
+        const table = document.getElementById('dataTable');
+        
+        // Create table HTML
+        let html = `
+            <table>
+                <thead>
+                    <tr>
+                        <th>Country</th>
+                        <th>Year</th>
+                        <th>Value</th>
+                    </tr>
+                </thead>
+                <tbody>
+        `;
+        
+        data.forEach(item => {
+            html += `
+                <tr>
+                    <td>${item.country__name}</td>
+                    <td>${item.year}</td>
+                    <td>${item.value?.toFixed(2) ?? 'N/A'}</td>
+                </tr>
+            `;
+        });
+        
+        html += '</tbody></table>';
+        table.innerHTML = html;
+    }
+});
+</script>
+
+<style>
+.advanced-filters-container {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 20px;
+}
+
+.page-title {
+    text-align: center;
+    margin-bottom: 30px;
+    color: #333;
+}
+
+.content-wrapper {
+    display: flex;
+    gap: 30px;
+    align-items: flex-start;
+}
+
+.filter-section {
+    flex: 0 0 300px;
+    background: #f5f5f5;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.results-section {
+    flex: 1;
+    background: white;
+    padding: 20px;
+    border-radius: 8px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    min-height: 600px;
+}
+
+.form-group {
+    margin-bottom: 20px;
+}
+
+.form-group label {
+    display: block;
+    margin-bottom: 8px;
+    font-weight: 600;
+    color: #333;
+}
+
+.form-group select,
+.form-group input[type="number"] {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #ddd;
+    border-radius: 4px;
+    font-size: 14px;
+}
+
+.country-select {
+    max-height: 200px;
+    overflow-y: auto;
+    border: 1px solid #ddd;
+    padding: 10px;
+    border-radius: 4px;
+    background: white;
+}
+
+.checkbox-item {
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+}
+
+.checkbox-item input[type="checkbox"] {
+    margin-right: 8px;
+}
+
+.date-range,
+.value-range {
+    display: flex;
+    gap: 15px;
+}
+
+.input-group {
+    flex: 1;
+}
+
+#chartContainer {
+    margin-bottom: 30px;
+    height: 400px;
+}
+
+table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 20px;
+    background: white;
+}
+
+th, td {
+    padding: 12px;
+    border: 1px solid #ddd;
+    text-align: left;
+}
+
+th {
+    background-color: #f5f5f5;
+    font-weight: 600;
+    color: #333;
+}
+
+tr:nth-child(even) {
+    background-color: #f9f9f9;
+}
+
+tr:hover {
+    background-color: #f5f5f5;
+}
+
+.btn {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: 600;
+    transition: background-color 0.3s ease;
+}
+
+.btn-primary {
+    background-color: #007bff;
+    color: white;
+}
+
+.btn-primary:hover {
+    background-color: #0056b3;
+}
+
+@media (max-width: 768px) {
+    .content-wrapper {
+        flex-direction: column;
+    }
+    
+    .filter-section {
+        flex: none;
+        width: 100%;
+    }
+    
+    .date-range,
+    .value-range {
+        flex-direction: column;
+        gap: 10px;
+    }
+}
+</style>
+{% endblock %}

@@ -6,6 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>MacroVis - Financial Data Visualization</title>
     <link rel="stylesheet" href="{% static 'financial_data/css/style.css' %}">
+    <link rel="stylesheet" href="{% static 'financial_data/css/advanced_filters.css' %}">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
@@ -15,6 +16,7 @@
             <div class="nav-links">
                 {% if user.is_authenticated %}
                     <a href="{% url 'financial_data:index' %}">Dashboard</a>
+                    <a href="{% url 'financial_data:advanced_filters' %}">Advanced Filters</a>
                     <a href="{% url 'accounts:profile' %}">Profile</a>
                     <a href="{% url 'accounts:logout' %}">Logout</a>
                 {% else %}
@@ -45,5 +47,6 @@
     </footer>
 
     <script src="{% static 'financial_data/js/script.js' %}"></script>
+    <script src="{% static 'financial_data/js/advanced_filters.js' %}"></script>
 </body>
 </html>
