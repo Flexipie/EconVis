@@ -1,3 +1,5 @@
+<!-- financial_data/templates/financial_data/base.html -->
+
 {% load static %}
 <!DOCTYPE html>
 <html lang="en">
@@ -11,15 +13,27 @@
 <body>
     <header>
         <nav class="navbar">
-            <div class="nav-brand">MacroVis</div>
+            <a href="{% url 'financial_data:index' %}" class="nav-brand">
+                <img src="{% static 'financial_data/images/macrovis_logo.png' %}" alt="MacroVis Logo" class="logo">
+            </a>
             <div class="nav-links">
                 {% if user.is_authenticated %}
-                    <a href="{% url 'financial_data:index' %}">Dashboard</a>
-                    <a href="{% url 'accounts:profile' %}">Profile</a>
-                    <a href="{% url 'accounts:logout' %}">Logout</a>
+                    <a href="{% url 'financial_data:index' %}" class="{% if request.resolver_match.url_name == 'index' %}active{% endif %}">
+                        <i class="fas fa-tachometer-alt"></i> Dashboard
+                    </a>
+                    <a href="{% url 'accounts:profile' %}" class="{% if request.resolver_match.url_name == 'profile' %}active{% endif %}">
+                        <i class="fas fa-user"></i> Profile
+                    </a>
+                    <a href="{% url 'accounts:logout' %}" class="{% if request.resolver_match.url_name == 'logout' %}active{% endif %}">
+                        <i class="fas fa-sign-out-alt"></i> Logout
+                    </a>
                 {% else %}
-                    <a href="{% url 'accounts:login' %}">Login</a>
-                    <a href="{% url 'accounts:register' %}">Register</a>
+                    <a href="{% url 'accounts:login' %}" class="{% if request.resolver_match.url_name == 'login' %}active{% endif %}">
+                        <i class="fas fa-sign-in-alt"></i> Login
+                    </a>
+                    <a href="{% url 'accounts:register' %}" class="{% if request.resolver_match.url_name == 'register' %}active{% endif %}">
+                        <i class="fas fa-user-plus"></i> Register
+                    </a>
                 {% endif %}
             </div>
         </nav>
@@ -40,10 +54,7 @@
         {% endblock %}
     </main>
 
-    <footer>
-        <p>&copy; 2024 MacroVis. All rights reserved.</p>
-    </footer>
-
-    <script src="{% static 'financial_data/js/script.js' %}"></script>
+    <!-- Include JavaScript files here -->
+    <script src="{% static 'financial_data/js/script.js' %}" defer></script>
 </body>
 </html>
