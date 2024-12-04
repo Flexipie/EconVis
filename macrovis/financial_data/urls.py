@@ -13,4 +13,5 @@ urlpatterns = [
     path('last-searches/add/', views.add_last_search, name='add_last_search'),
     path('last-searches/list/', views.list_last_searches, name='list_last_searches'),
     path('delete_last_searches/', views.delete_all_last_searches, name='delete_last_searches'),
+    path('export/<str:country_code>/<str:indicator_code>/', views.export_financial_data, name='export_financial_data'),
 ]
