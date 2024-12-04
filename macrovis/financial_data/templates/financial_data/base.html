@@ -52,6 +52,19 @@
 
         {% block content %}
         {% endblock %}
+
+        <!-- Export Button -->
+        {% if country and indicator %}
+        <div class="export-section">
+            <a href="{% url 'export_financial_data' country_code=country.code indicator_code=indicator.code %}" class="btn btn-primary">
+                Export Data to CSV
+            </a>
+        </div>
+        {% endif %}
+    </main>
+
+
+        
     </main>
 
     <!-- Include JavaScript files here -->
