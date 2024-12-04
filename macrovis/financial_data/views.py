@@ -223,3 +223,20 @@ def delete_all_last_searches(request):
     else:
         messages.error(request, "Invalid request method.")
         return redirect('financial_data:index')
+
+@login_required
+def export_financial_data(request, country_code, indicator_code):
+    # Query the data based on the country_code and indicator_code
+    financial_data = FinancialData.objects.filter(country__code=country_code, indicator__code=indicator_code)
+
+    # Create a response object and set content type for CSV
+    response = HttpResponse(content_type='text/csv')
+    response['Content-Disposition'] = f'attachment; filename="{country_code}_{indicator_code}_financial_data.csv"'
+
+    # Write data to the CSV file
+    writer = csv.writer(response)
+    writer.writerow(['Date', 'Value'])  # Write header row
+    for data in financial_data:
+        writer.writerow([data.date, data.value])  # Customize this based on your model fields
+
+    return response
